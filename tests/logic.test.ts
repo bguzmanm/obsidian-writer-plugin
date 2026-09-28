@@ -1,5 +1,6 @@
 import { countWords, countWordsInText, firstMeaningfulLine, estimateMinutes } from "../src/stats/count";
 import { addDays, computeStreaks, formatDate, startOfWeek, todayKey } from "../src/stats/dates";
+import { advanceBaseline } from "../src/stats/live";
 import type { DayStat } from "../src/types";
 
 let pass = 0;
@@ -279,6 +280,85 @@ check(
 	"entradas desordenadas",
 	computeStreaks([day("2026-09-27", 10), day("2026-09-25", 10), day("2026-09-26", 10)], "2026-09-27"),
 	{ streak: 3, bestStreak: 3 }
+);
+
+// --------------------------------------------------- referencia día/semana
+
+section("referencias día y semana (palabras de hoy y esta semana)");
+
+check(
+	"sin referencia: hoy y semana empiezan en cero",
+	advanceBaseline(undefined, 1200, "2026-09-27", "2026-09-21"),
+	{
+		baseline: { day: "2026-09-27", dayWords: 1200, week: "2026-09-21", weekWords: 1200 },
+		today: 0,
+		week: 0,
+		changed: true,
+	}
+);
+
+check(
+	"el mismo día: hoy crece con lo escrito",
+	advanceBaseline(
+		{ day: "2026-09-27", dayWords: 1200, week: "2026-09-21", weekWords: 1000 },
+		1350,
+		"2026-09-27",
+		"2026-09-21"
+	),
+	{
+		baseline: { day: "2026-09-27", dayWords: 1200, week: "2026-09-21", weekWords: 1000 },
+		today: 150,
+		week: 350,
+		changed: false,
+	}
+);
+
+check(
+	"día nuevo: la referencia del día avanza al total actual, la semana sigue",
+	advanceBaseline(
+		{ day: "2026-09-26", dayWords: 1000, week: "2026-09-21", weekWords: 800 },
+		1250,
+		"2026-09-27",
+		"2026-09-21"
+	),
+	{
+		baseline: { day: "2026-09-27", dayWords: 1250, week: "2026-09-21", weekWords: 800 },
+		today: 0,
+		week: 450,
+		changed: true,
+	}
+);
+
+check(
+	"semana nueva: la referencia de la semana avanza al total actual",
+	advanceBaseline(
+		{ day: "2026-09-28", dayWords: 1500, week: "2026-09-21", weekWords: 900 },
+		1600,
+		"2026-09-28",
+		"2026-09-28"
+	),
+	{
+		baseline: { day: "2026-09-28", dayWords: 1500, week: "2026-09-28", weekWords: 1600 },
+		today: 100,
+		week: 0,
+		changed: true,
+	}
+);
+
+check(
+	"nunca negativo aunque hoy se recorte el manuscrito",
+	advanceBaseline(
+		{ day: "2026-09-27", dayWords: 1200, week: "2026-09-21", weekWords: 1100 },
+		1100,
+		"2026-09-27",
+		"2026-09-21"
+	),
+	{
+		baseline: { day: "2026-09-27", dayWords: 1200, week: "2026-09-21", weekWords: 1100 },
+		today: 0,
+		week: 0,
+		changed: false,
+	}
 );
 
 // --------------------------------------------------------------- resumen

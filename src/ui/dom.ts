@@ -109,10 +109,3 @@ export function empty(message: string): HTMLElement {
 export function num(n: number): string {
 	return new Intl.NumberFormat("es-ES").format(Math.round(n));
 }
-
-export function minutesText(min: number): string {
-	if (min < 60) return `${min} min`;
-	const h = Math.floor(min / 60);
-	const m = min % 60;
-	return m === 0 ? `${h} h` : `${h} h ${m} min`;
-}

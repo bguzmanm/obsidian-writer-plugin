@@ -2,6 +2,7 @@ import { App, TFile, TFolder } from "obsidian";
 import { WriterSettings } from "../settings";
 import { countWords, firstMeaningfulLine } from "../stats/count";
 import { computeStreaks, startOfWeek, todayKey } from "../stats/dates";
+import { advanceBaseline } from "../stats/live";
 import {
 	BookRef,
 	Chapter,
@@ -40,6 +41,12 @@ export class BookRepository {
 	app: App;
 	settings: WriterSettings;
 	private counts = new Map<string, CountCacheEntry>();
+	/** Se llama cuando avanza la referencia diaria/semanal, para persistirla. */
+	onBaselinesChanged: (() => void) | null = null;
+	/** Se llama tras cada build con las palabras del día en vivo. */
+	onTodayWords: ((words: number) => void) | null = null;
+	/** Palabras del día en vivo, refrescadas en cada build del manuscrito. */
+	lastToday = 0;
 
 	constructor(app: App, settings: WriterSettings) {
 		this.app = app;
@@ -348,16 +355,24 @@ export class BookRepository {
 		const byStatus = ZERO_STATUS();
 		for (const scene of scenes) byStatus[scene.status] += 1;
 
+		// hoy y la semana se miden contra la referencia del manuscrito:
+		// el total que había al empezar ese día (y esa semana). Así no hace
+		// falta recordar cerrar una sesión para que el panel esté al día.
 		const today = todayKey();
 		const weekStart = startOfWeek(new Date());
-
-		let todayWords = 0;
-		let weekWords = 0;
-		for (const day of daily) {
-			if (day.date === today) todayWords = day.words;
-			if (day.date >= weekStart) weekWords += day.words;
+		const baselines = (this.settings.baselines ??= {});
+		const live = advanceBaseline(baselines[book], words, today, weekStart);
+		if (live.changed) {
+			baselines[book] = live.baseline;
+			this.onBaselinesChanged?.();
 		}
-		const { streak, bestStreak } = computeStreaks(daily);
+		this.lastToday = live.today;
+		this.onTodayWords?.(live.today);
+
+		// la serie diaria se usa para la racha y el mapa de calor; hoy vale
+		// lo que realmente lleva el manuscrito, haya o no sesión guardada
+		const dailyLive = injectToday(daily, today, live.today, scenes.length > 0);
+		const { streak, bestStreak } = computeStreaks(dailyLive);
 
 		return {
 			book,
@@ -367,11 +382,11 @@ export class BookRepository {
 			scenes,
 			byStatus,
 			chapters,
-			daily,
+			daily: dailyLive,
 			streak,
 			bestStreak,
-			today: todayWords,
-			week: weekWords,
+			today: live.today,
+			week: live.week,
 			weekGoal: this.settings.weeklyGoal,
 			todayGoal: this.settings.dailyGoal,
 		};
@@ -409,6 +424,22 @@ export class BookRepository {
 
 function escapeRe(s: string): string {
 	return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
+ * Devuelve la serie diaria con el día de hoy presente: si ya había entrada
+ * se conservan sus minutos pero las palabras pasan a ser el valor en vivo
+ * del manuscrito; si no había y hoy hay palabras, se añade.
+ */
+function injectToday(daily: DayStat[], today: string, words: number, hasScenes: boolean): DayStat[] {
+	if (!hasScenes && words <= 0) return daily;
+	const existing = daily.find((d) => d.date === today);
+	const minutes = existing?.minutes ?? 0;
+	if (words === existing?.words && minutes === existing?.minutes) return daily;
+	if (words <= 0 && minutes <= 0) return daily;
+	const next = daily.filter((d) => d.date !== today).concat({ date: today, words, minutes });
+	next.sort((a, b) => a.date.localeCompare(b.date));
+	return next;
 }
 
 /** Personajes (POV + bw_characters) de un grupo de escenas, sin repetir. */

@@ -1,7 +1,7 @@
 import { ItemView, Menu, TFile, WorkspaceLeaf } from "obsidian";
 import type WriterPlugin from "../main";
 import { VIEW_TYPE_WRITER, Manuscript, STATUS_LABELS, STATUS_ORDER, SceneStatus, ROLE_LABELS } from "../types";
-import { button, div, empty, link, make, minutesText, num, progressBar, section, span, statRow } from "./dom";
+import { button, div, empty, link, make, num, progressBar, section, span, statRow } from "./dom";
 
 type TabId = "progreso" | "manuscrito" | "fichero";
 
@@ -110,7 +110,7 @@ export class WriterSidebar extends ItemView {
 
 		const right = div("bw-header-actions");
 
-		const running = this.plugin.sessions.isRunning;
+		const running = this.plugin.focus.isActive;
 		right.appendChild(
 			button(
 				running ? "Terminar" : "Escribir",
@@ -118,7 +118,7 @@ export class WriterSidebar extends ItemView {
 				{
 					cls: "bw-btn-primary",
 					title: running
-						? "Cierra el modo escritura y guarda la sesión en curso"
+						? "Cierra el modo escritura"
 						: "Entra en modo escritura: oculta la interfaz y centra el cursor",
 				}
 			)
@@ -207,11 +207,6 @@ export class WriterSidebar extends ItemView {
 		);
 		if (m.todayGoal > 0) {
 			todayCard.appendChild(progressBar(m.today / m.todayGoal));
-		}
-		if (this.plugin.sessions.isRunning) {
-			todayCard.appendChild(
-				statRow("Sesión en curso", minutesText(this.plugin.sessions.elapsedMinutes), "is-live")
-			);
 		}
 		wrap.appendChild(todayCard);
 

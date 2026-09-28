@@ -54,18 +54,6 @@ export function registerCommands(plugin: WriterPlugin): void {
 	});
 
 	p.addCommand({
-		id: "start-session",
-		name: "Empezar una sesión de escritura",
-		callback: () => void plugin.startSession(),
-	});
-
-	p.addCommand({
-		id: "stop-session",
-		name: "Terminar la sesión de escritura",
-		callback: () => void plugin.stopSession(),
-	});
-
-	p.addCommand({
 		id: "continue-writing",
 		name: "Seguir escribiendo donde lo dejaste",
 		callback: () => void plugin.continueWriting(),

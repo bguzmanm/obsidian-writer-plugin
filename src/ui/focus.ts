@@ -7,7 +7,7 @@ import { div, num } from "./dom";
 
 /**
  * Modo escritura: oculta la interfaz, limita el ancho de línea, centra el
- * cursor y lleva el control de la sesión. Se sale con Escape.
+ * cursor y lleva un temporizador. Se sale con Escape.
  */
 export class FocusMode {
 	app: App;
@@ -49,10 +49,6 @@ export class FocusMode {
 		document.body.addClass("bw-focus-mode");
 		this.app.workspace.containerEl.addClass("bw-focus-active");
 
-		// arranca la sesión de escritura si no hay ninguna
-		if (!this.plugin.sessions.isRunning) {
-			await this.plugin.sessions.start(this.currentFile());
-		}
 		this.startWords = this.plugin.lastLiveWords;
 
 		this.buildOverlay();
@@ -85,14 +81,9 @@ export class FocusMode {
 		}
 		this.lastHead = -1;
 
-		// cierra la sesión de escritura y refresca la cabecera de la escena
-		const book = this.plugin.activeBook;
-		if (this.plugin.sessions.isRunning && book) {
-			void this.plugin.sessions.stop(book).then((session) => {
-				if (session?.notePath) return this.plugin.syncSceneHeader(session.notePath);
-				return undefined;
-			});
-		}
+		// refresca la cabecera de la escena que estaba abierta
+		const file = this.currentFile();
+		if (file) void this.plugin.syncSceneHeader(file.path);
 
 		void this.plugin.refreshAll();
 	}

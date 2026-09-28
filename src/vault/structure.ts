@@ -501,10 +501,7 @@ export async function getOrCreateDailyLog(
 	if (existing) return existing;
 
 	const file = asFile(
-		await app.vault.create(
-			path,
-			`# ${date}\n\n## Sesiones\n\n| Inicio | Fin | Minutos | Palabras | Notas |\n| --- | --- | --- | --- | --- |\n\n## Notas del día\n`
-		)
+		await app.vault.create(path, `# ${date}\n\n## Notas del día\n`)
 	);
 	if (!file) throw new Error(`No se pudo crear el registro ${path}`);
 
@@ -514,7 +511,6 @@ export async function getOrCreateDailyLog(
 		[FM.DATE]: date,
 		[FM.WORDS]: 0,
 		[FM.MINUTES]: 0,
-		[FM.SESSIONS]: 0,
 		[FM.GOAL]: settings.dailyGoal,
 	});
 

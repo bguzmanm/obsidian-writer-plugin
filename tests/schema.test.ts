@@ -10,7 +10,6 @@ import {
 	noteView,
 } from "../src/vault/schema";
 import { sanitizeName, pad, uniquePath } from "../src/vault/structure";
-import { sumRows } from "../src/stats/sessions";
 
 /**
  * Un TFile de mentira con el frontmatter ya parseado, que es como lo ve el
@@ -152,61 +151,6 @@ check(
 	"funciona con carpetas también",
 	uniquePath(fakeVault(["Libros/A"]), "Libros/A"),
 	"Libros/A 2"
-);
-
-// ------------------------------------------------- acumulación de sesiones
-
-section("acumulación de sesiones");
-
-const EMPTY_LOG = [
-	"# 2026-09-27",
-	"",
-	"## Sesiones",
-	"",
-	"| Inicio | Fin | Minutos | Palabras | Notas |",
-	"| --- | --- | --- | --- | --- |",
-	"",
-	"## Notas del día",
-].join("\n");
-
-check("un log recién creado no suma nada", sumRows(EMPTY_LOG), { words: 0, minutes: 0, sessions: 0 });
-
-const withRows = [
-	EMPTY_LOG.split("\n")[0],
-	"",
-	"## Sesiones",
-	"",
-	"| Inicio | Fin | Minutos | Palabras | Notas |",
-	"| --- | --- | --- | --- | --- |",
-	"| 09:12 | 09:47 | 35 | 420 | +2500 car. |",
-	"| 21:03 | 21:38 | 35 | 512 | +3100 car. |",
-	"",
-].join("\n");
-
-check("suma las filas de la tabla", sumRows(withRows), { words: 932, minutes: 70, sessions: 2 });
-
-check(
-	"ignora la cabecera y el separador",
-	sumRows("| Inicio | Fin | Minutos | Palabras | Notas |\n| --- | --- | --- | --- | --- |"),
-	{ words: 0, minutes: 0, sessions: 0 }
-);
-
-check(
-	"ignora las tablas de otras secciones",
-	sumRows("| Inicio | Fin |\n| --- | --- |\n| 10:00 | 11:00 |"),
-	{ words: 0, minutes: 0, sessions: 0 }
-);
-
-check(
-	"la cabecera de la nota de recuento no se confunde con una sesión",
-	sumRows("| Capítulo | Palabras |\n| --- | --- |\n| Uno | 1200 |"),
-	{ words: 0, minutes: 0, sessions: 0 }
-);
-
-check(
-	"celdas con guiones cuentan como cero, no como NaN",
-	sumRows("| 09:12 | 09:47 | — | — | +0 car. |"),
-	{ words: 0, minutes: 0, sessions: 1 }
 );
 
 // ------------------------------------- frontmatter recién escrito (sin caché)

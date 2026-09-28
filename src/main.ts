@@ -1,7 +1,6 @@
 import { MarkdownView, Notice, Plugin, TFile, WorkspaceLeaf, normalizePath } from "obsidian";
 import { registerCommands } from "./commands";
 import { DEFAULT_SETTINGS, WriterSettings, WriterSettingTab } from "./settings";
-import { SessionTracker } from "./stats/sessions";
 import { todayKey } from "./stats/dates";
 import { FM, ROLE_LABELS, SceneStatus, STATUS_LABELS, STATUS_ORDER, VIEW_TYPE_WRITER } from "./types";
 import { registerDialogueBlocks } from "./ui/dialogue";
@@ -10,7 +9,7 @@ import { NamePickerModal, MultiPickerModal, roleOptions, ScenePickerModal, TextA
 import { WriterSidebar } from "./ui/sidebar";
 import { num } from "./ui/dom";
 import { BookRepository } from "./vault/repository";
-import { writeFrontMatter } from "./vault/schema";
+import { fmNumber, noteView, writeFrontMatter } from "./vault/schema";
 import {
 	bookRoot,
 	createBook,
@@ -27,7 +26,6 @@ import {
 export default class WriterPlugin extends Plugin {
 	settings: WriterSettings = { ...DEFAULT_SETTINGS };
 	repo!: BookRepository;
-	sessions!: SessionTracker;
 	focus!: FocusMode;
 
 	/** Palabras de la nota abierta, refrescadas en cada cambio. */
@@ -36,12 +34,15 @@ export default class WriterPlugin extends Plugin {
 	private statusBarEl: HTMLElement | null = null;
 	private sidebar: WriterSidebar | null = null;
 	private refreshQueued = false;
+	/** Último momento en que se actualizó el registro del día en el vault. */
+	private lastDailyRecord = 0;
 
 	async onload(): Promise<void> {
 		await this.loadSettings();
 
 		this.repo = new BookRepository(this.app, this.settings);
-		this.sessions = new SessionTracker(this.app, this.settings, this.repo);
+		this.repo.onBaselinesChanged = () => void this.saveSettings();
+		this.repo.onTodayWords = (words) => void this.recordTodayWords(words);
 		this.focus = new FocusMode(this.app, this);
 
 		this.addSettingTab(new WriterSettingTab(this.app, this));
@@ -78,7 +79,6 @@ export default class WriterPlugin extends Plugin {
 	async saveSettings(): Promise<void> {
 		await this.saveData(this.settings);
 		this.repo.settings = this.settings;
-		this.sessions.settings = this.settings;
 	}
 
 	get activeBook(): string {
@@ -185,10 +185,6 @@ export default class WriterPlugin extends Plugin {
 		if (goal > 0) {
 			const pct = Math.round((words / goal) * 100);
 			el.appendChild(el.createSpan({ cls: "bw-statusbar-goal", text: ` / ${num(goal)} (${pct}%)` }));
-		}
-
-		if (this.sessions.isRunning) {
-			el.appendChild(el.createSpan({ cls: "bw-statusbar-live", text: ` ${this.sessions.elapsedMinutes} min` }));
 		}
 	}
 
@@ -439,22 +435,26 @@ export default class WriterPlugin extends Plugin {
 		return STATUS_ORDER.includes(raw) ? raw : "draft";
 	}
 
-	// ------------------------------------------------------------- sesiones
+	// ------------------------------------------------------- registro diario
 
-	async startSession(): Promise<void> {
-		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
-		await this.sessions.start(view?.file ?? null);
-		if (this.sessions.isRunning) {
-			new Notice("Sesión de escritura iniciada. Esc cuando termines.");
-		}
-		this.updateStatusBar();
-	}
+	/**
+	 * Persiste las palabras del día en la nota de registro, con límite de
+	 * escrituras para no ensuciar el vault: a lo sumo un write cada 30 s y
+	 * solo si el valor cambió.
+	 */
+	async recordTodayWords(words: number): Promise<void> {
+		if (!this.activeBook || words <= 0) return;
 
-	async stopSession(): Promise<void> {
-		const session = await this.sessions.stop(this.activeBook);
-		this.repo.invalidate();
-		await this.refreshAll();
-		if (session?.notePath) await this.syncSceneHeader(session.notePath);
+		const now = Date.now();
+		if (now - this.lastDailyRecord < 30_000) return;
+		this.lastDailyRecord = now;
+
+		const date = todayKey();
+		const log = await getOrCreateDailyLog(this.app, this.settings, this.activeBook, date);
+		const view = noteView(log, await this.app.vault.read(log));
+		const current = fmNumber(view, FM.WORDS, 0);
+		if (current === words) return;
+		await writeFrontMatter(this.app, log, { [FM.WORDS]: words, [FM.DATE]: date });
 	}
 
 	async toggleFocus(): Promise<void> {
@@ -530,8 +530,6 @@ export default class WriterPlugin extends Plugin {
 		const m = await this.repo.buildManuscript(book);
 		const today = m.daily.find((d) => d.date === date);
 		const words = today?.words ?? 0;
-		const minutes = today?.minutes ?? 0;
-		const sessions = m.daily.find((d) => d.date === date);
 
 		const goal = this.settings.dailyGoal;
 		const pct = goal > 0 ? Math.round((words / goal) * 100) : 0;
@@ -540,7 +538,6 @@ export default class WriterPlugin extends Plugin {
 			"## Resumen del día",
 			"",
 			`- **Palabras:** ${num(words)}${goal > 0 ? ` de ${num(goal)} (${pct}%)` : ""}`,
-			`- **Tiempo:** ${minutes} min`,
 			`- **Racha:** ${m.streak} días seguidos`,
 			`- **Total del manuscrito:** ${num(m.words)} palabras en ${m.scenes.length} escenas`,
 			"",
@@ -554,7 +551,6 @@ export default class WriterPlugin extends Plugin {
 			await this.app.vault.append(log, `\n${block}`);
 		}
 
-		void sessions;
 		this.repo.invalidate();
 		await this.refreshAll();
 		await this.app.workspace.getLeaf(false).openFile(log);

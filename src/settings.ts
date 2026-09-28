@@ -1,4 +1,5 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
+import type { WordBaseline } from "./stats/live";
 import type WriterPlugin from "./main";
 
 export interface WriterSettings {
@@ -22,6 +23,11 @@ export interface WriterSettings {
 	autoDetectBook: boolean;
 	/** Palabras objetivo para terminar el manuscrito. */
 	bookGoal: number;
+	/**
+	 * Referencias de inicio (día y semana) del manuscrito, por libro.
+	 * Se usan para medir "hoy" y "esta semana" en vivo.
+	 */
+	baselines: Record<string, WordBaseline>;
 }
 
 export const DEFAULT_SETTINGS: WriterSettings = {
@@ -36,6 +42,7 @@ export const DEFAULT_SETTINGS: WriterSettings = {
 	countHeadings: false,
 	autoDetectBook: true,
 	bookGoal: 80000,
+	baselines: {},
 };
 
 export class WriterSettingTab extends PluginSettingTab {
