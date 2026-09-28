@@ -6,6 +6,8 @@
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc --noEmit --skipLibCheck && node esbuild.config.mjs production",
+		"deploy": "node scripts/deploy.mjs",
+		"deploy:watch": "node scripts/deploy.mjs --watch",
 		"typecheck": "tsc --noEmit --skipLibCheck",
 		"test": "node tests/build.mjs && node /tmp/bw-test/logic.cjs && node /tmp/bw-test/schema.cjs && node /tmp/bw-test/flow.mjs && node /tmp/bw-test/dom.mjs"
 	},

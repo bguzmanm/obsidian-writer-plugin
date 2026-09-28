@@ -5,3 +5,5 @@ data.json
 *.log
 .DS_Store
 .idea/
+.deploy-path
+.hotreload
