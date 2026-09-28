@@ -371,6 +371,10 @@ export class WriterSidebar extends ItemView {
 			const sec = section(`${chapter.title} · ${num(chapter.words)} palabras`, chapter.order > 0 && m.chapters.length > 4);
 			const bodyEl = div("bw-section-body");
 
+			if (chapter.characters.length > 0) {
+				bodyEl.appendChild(div("bw-chapter-chars", `Personajes: ${chapter.characters.join(", ")}`));
+			}
+
 			if (chapter.scenes.length === 0) {
 				bodyEl.appendChild(empty("Sin escenas."));
 			}
@@ -398,6 +402,7 @@ export class WriterSidebar extends ItemView {
 		words: number;
 		status: SceneStatus;
 		pov: string;
+		characters: string[];
 		synopsis: string;
 	}): HTMLElement {
 		const row = div("bw-scene");
@@ -429,6 +434,9 @@ export class WriterSidebar extends ItemView {
 		const meta = div("bw-scene-meta");
 		meta.appendChild(span("bw-scene-words", `${num(scene.words)} palabras`));
 		if (scene.pov) meta.appendChild(span("bw-scene-pov", `POV: ${scene.pov}`));
+		if (scene.characters.length > 0) {
+			meta.appendChild(span("bw-scene-chars", scene.characters.join(", ")));
+		}
 		row.appendChild(meta);
 
 		if (scene.synopsis) {

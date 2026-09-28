@@ -126,6 +126,16 @@ export function registerCommands(plugin: WriterPlugin): void {
 	});
 
 	p.addCommand({
+		id: "set-characters",
+		name: "Escena: marcar los personajes presentes",
+		editorCallback: async (editor, view) => {
+			if (!view.file) return;
+			await plugin.setCharactersForScene(view.file);
+			void editor;
+		},
+	});
+
+	p.addCommand({
 		id: "cycle-status",
 		name: "Escena: cambiar el estado",
 		editorCallback: async (editor, view) => {

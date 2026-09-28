@@ -30,6 +30,15 @@ export function fmNumber(file: TFile, key: string, fallback = 0): number {
 	return fallback;
 }
 
+/** Lee una lista de cadenas (bw_characters, bw_tags…), sea inline o en bloque. */
+export function fmStringList(file: TFile, key: string): string[] {
+	const v = fmGet(file, key);
+	if (!Array.isArray(v)) return [];
+	return v
+		.map((x) => (x === null || x === undefined ? "" : String(x).trim()))
+		.filter((s) => s !== "");
+}
+
 /** Lee el tipo de nota ("scene", "character"…). */
 export function itemType(file: TFile): ItemType | "" {
 	return fmString(file, FM.TYPE) as ItemType;

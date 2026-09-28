@@ -15,7 +15,7 @@ import {
 	STATUS_ORDER,
 	WorldEntry,
 } from "../types";
-import { bodyOf, fmNumber, fmString, isType, noteView, writeFrontMatter } from "./schema";
+import { bodyOf, fmNumber, fmString, fmStringList, isType, noteView, writeFrontMatter } from "./schema";
 import { bookRoot, readChapters } from "./structure";
 
 interface CountCacheEntry {
@@ -136,6 +136,7 @@ export class BookRepository {
 				order: fmNumber(view, FM.ORDER, 0),
 				status: STATUS_ORDER.includes(status) ? status : "draft",
 				pov: fmString(view, FM.POV),
+				characters: fmStringList(view, FM.CHARACTERS),
 				words,
 				chars,
 				synopsis: this.extractSection(body, "Sinopsis"),
@@ -194,6 +195,7 @@ export class BookRepository {
 				title: ref.title,
 				order: ref.order,
 				scenes: list,
+				characters: chapterCharacters(list),
 				words: list.reduce((sum, s) => sum + s.words, 0),
 			};
 		});
@@ -207,6 +209,7 @@ export class BookRepository {
 				title,
 				order: 9999,
 				scenes: list,
+				characters: chapterCharacters(list),
 				words: list.reduce((sum, s) => sum + s.words, 0),
 			});
 		}
@@ -234,8 +237,15 @@ export class BookRepository {
 			const role = (fmString(view, FM.ROLE, "secondary") as CharacterRole) || "secondary";
 			known.add(name.toLowerCase());
 
-			// menciones: escenas con este personaje como POV
-			const appearsIn = scenes.filter((s) => s.pov.toLowerCase() === name.toLowerCase()).map((s) => s.path);
+			// apariciones: escenas donde es POV o está marcado en bw_characters
+			const appearsIn = scenes
+				.filter((s) => {
+					const asPov = s.pov.toLowerCase() === name.toLowerCase();
+					const listed = s.characters.some((c) => c.toLowerCase() === name.toLowerCase());
+					return asPov || listed;
+				})
+				.map((s) => s.path)
+				.filter((path, i, arr) => arr.indexOf(path) === i);
 
 			characters.push({
 				path: file.path,
@@ -262,7 +272,9 @@ export class BookRepository {
 				role: "secondary",
 				status: "sin ficha",
 				summary: "",
-				appearsIn: scenes.filter((s) => s.pov === scene.pov).map((s) => s.path),
+				appearsIn: scenes
+					.filter((s) => s.pov === scene.pov || s.characters.includes(scene.pov))
+					.map((s) => s.path),
 			});
 		}
 
@@ -397,4 +409,27 @@ export class BookRepository {
 
 function escapeRe(s: string): string {
 	return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/** Personajes (POV + bw_characters) de un grupo de escenas, sin repetir. */
+function chapterCharacters(scenes: Scene[]): string[] {
+	const seen = new Set<string>();
+	const out: string[] = [];
+	for (const scene of scenes) {
+		if (scene.pov) {
+			const k = scene.pov.toLowerCase();
+			if (!seen.has(k)) {
+				seen.add(k);
+				out.push(scene.pov);
+			}
+		}
+		for (const name of scene.characters) {
+			const k = name.toLowerCase();
+			if (!seen.has(k)) {
+				seen.add(k);
+				out.push(name);
+			}
+		}
+	}
+	return out;
 }

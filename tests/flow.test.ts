@@ -9,7 +9,9 @@
  */
 
 import { BookRepository } from "../src/vault/repository";
-import { createBook, createChapter, createScene, readChapters, addChapterRef } from "../src/vault/structure";
+import { createBook, createChapter, createScene, readChapters, addChapterRef, createCharacter, updateSceneHeader } from "../src/vault/structure";
+import { writeFrontMatter } from "../src/vault/schema";
+import { FM } from "../src/types";
 import { TFile, TFolder, normalizePath } from "./obsidian-stub";
 import { countWords } from "../src/stats/count";
 
@@ -130,6 +132,16 @@ class FakeVault {
 		if (!entry) return;
 		entry.content = content;
 		this.mtime += 1;
+	}
+
+	async process(file: TFile, fn: (source: string) => string): Promise<void> {
+		const entry = this.files.get(file.path);
+		if (!entry) return;
+		const updated = fn(entry.content);
+		if (updated !== entry.content) {
+			entry.content = updated;
+			this.mtime += 1;
+		}
 	}
 
 	async append(file: TFile, content: string): Promise<void> {
@@ -334,6 +346,51 @@ async function legacyVault(): Promise<{ vault: FakeVault; app: never }> {
 	check("junta los heredados con el nuevo", all.map((c) => c.title), ["Antiguo", "Segundo", "Nuevo"]);
 	check("con órdenes correlativos", all.map((c) => c.order), [1, 2, 3]);
 }
+
+// ------------------------------------------- personajes marcados por escena
+
+section("marcar personajes en una escena");
+
+const anaFile = await createCharacter(app, settings, BOOK, "Ana");
+const scenesBefore = await repo.getScenes(BOOK);
+const firstScene = scenesBefore[0];
+check("los personajes parten vacíos", firstScene.characters, []);
+check("ni el capítulo tiene personajes", (await repo.buildManuscript(BOOK)).chapters[0].characters, []);
+
+const firstSceneFile = vault.getAbstractFileByPath(firstScene.path) as FakeFile;
+await writeFrontMatter(app, firstSceneFile, { [FM.CHARACTERS]: ["Ana"] });
+
+const midScenes = await repo.getScenes(BOOK);
+check("getScenes lee el personaje marcado", midScenes[0].characters, ["Ana"]);
+
+const midManuscript = await repo.buildManuscript(BOOK);
+check("el capítulo agrega a Ana", midManuscript.chapters[0].characters, ["Ana"]);
+
+const withChars = await repo.getCharacters(BOOK, midScenes);
+const ana = withChars.find((c) => c.name === "Ana");
+check("Ana aparece en la escena marcada", ana !== undefined && ana.appearsIn.includes(firstScene.path), true);
+void anaFile;
+
+// ----------------------------------------------- cabecera de la escena viva
+
+section("la cabecera de la escena sigue al frontmatter");
+
+let sceneSource = await vault.read(firstSceneFile);
+check("la escena nueva trae su cabecera", /POV:\*\* —/.test(sceneSource), true);
+
+await writeFrontMatter(app, firstSceneFile, { [FM.POV]: "Ana", [FM.STATUS]: "revision" });
+await updateSceneHeader(app, settings, firstSceneFile);
+sceneSource = await vault.read(firstSceneFile);
+check("la cabecera refleja el POV nuevo", /POV:\*\* Ana/.test(sceneSource), true);
+check("y el estado nuevo", /Estado:\*\* revision/.test(sceneSource), true);
+
+await vault.modify(
+	firstSceneFile,
+	"---\nbw_type: scene\n---\n# A\n\n> **POV:** —   **Estado:** draft   **Palabras:** 0\n\nPalabras de prueba aquí.\n"
+);
+await updateSceneHeader(app, settings, firstSceneFile);
+sceneSource = await vault.read(firstSceneFile);
+check("cuenta las palabras reales", /Palabras:\*\* 4/.test(sceneSource), true);
 
 // -------------------------------------------------------------- resumen
 

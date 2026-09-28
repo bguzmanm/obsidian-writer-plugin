@@ -187,6 +187,59 @@ export class NamePickerModal extends FuzzySuggestModal<{ name: string; path: str
 	}
 }
 
+/** Modal de selección múltiple con checkboxes. */
+export class MultiPickerModal extends Modal {
+	private checked: Set<string>;
+	private title: string;
+	private items: { name: string; hint: string; selected: boolean }[];
+	private onSubmit: (names: string[]) => void;
+
+	constructor(
+		app: App,
+		opts: {
+			title: string;
+			items: { name: string; hint: string; selected: boolean }[];
+			onSubmit: (names: string[]) => void;
+		}
+	) {
+		super(app);
+		this.title = opts.title;
+		this.items = opts.items;
+		this.checked = new Set(opts.items.filter((i) => i.selected).map((i) => i.name));
+		this.onSubmit = opts.onSubmit;
+	}
+
+	onOpen(): void {
+		const { contentEl, titleEl } = this;
+		titleEl.setText(this.title);
+		contentEl.empty();
+
+		if (this.items.length === 0) {
+			new Setting(contentEl).setDesc("Todavía no hay fichas de personajes en este libro.");
+		}
+
+		for (const item of this.items) {
+			new Setting(contentEl).setName(item.name).setDesc(item.hint).addToggle((tg) =>
+				tg.setValue(this.checked.has(item.name)).onChange((on) => {
+					if (on) this.checked.add(item.name);
+					else this.checked.delete(item.name);
+				})
+			);
+		}
+
+		new Setting(contentEl).addButton((b) =>
+			b.setButtonText("Guardar").setCta().onClick(() => {
+				this.close();
+				this.onSubmit([...this.checked]);
+			})
+		);
+	}
+
+	onClose(): void {
+		this.contentEl.empty();
+	}
+}
+
 export function roleOptions(): { value: string; label: string }[] {
 	return (Object.keys(ROLE_LABELS) as CharacterRole[]).map((r) => ({
 		value: r,

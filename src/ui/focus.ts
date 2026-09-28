@@ -85,10 +85,13 @@ export class FocusMode {
 		}
 		this.lastHead = -1;
 
-		// cierra la sesión de escritura
+		// cierra la sesión de escritura y refresca la cabecera de la escena
 		const book = this.plugin.activeBook;
 		if (this.plugin.sessions.isRunning && book) {
-			void this.plugin.sessions.stop(book);
+			void this.plugin.sessions.stop(book).then((session) => {
+				if (session?.notePath) return this.plugin.syncSceneHeader(session.notePath);
+				return undefined;
+			});
 		}
 
 		void this.plugin.refreshAll();

@@ -66,9 +66,12 @@ export function countWords(source: string, options: CountOptions = { countHeadin
 
 		const isHeading = /^\s{0,3}#{1,6}\s/.test(rawLine);
 		const isTable = /^\s{0,3}\|/.test(rawLine);
+		// la cabecera de escena (> **POV:** …) es metadata, como el frontmatter
+		const isSceneHeader = /^\s{0,3}>\s*\*\*POV:\*\*/.test(rawLine);
 
 		if (isHeading && !options.countHeadings) continue;
 		if (isTable) continue;
+		if (isSceneHeader) continue;
 
 		let line = stripMarkdown(rawLine);
 		// las citas siguen siendo texto del autor

@@ -6,7 +6,7 @@ import { todayKey } from "./stats/dates";
 import { FM, ROLE_LABELS, SceneStatus, STATUS_LABELS, STATUS_ORDER, VIEW_TYPE_WRITER } from "./types";
 import { registerDialogueBlocks } from "./ui/dialogue";
 import { FocusMode } from "./ui/focus";
-import { NamePickerModal, roleOptions, ScenePickerModal, TextAndSelectModal, TextPromptModal, worldKindOptions } from "./ui/modals";
+import { NamePickerModal, MultiPickerModal, roleOptions, ScenePickerModal, TextAndSelectModal, TextPromptModal, worldKindOptions } from "./ui/modals";
 import { WriterSidebar } from "./ui/sidebar";
 import { num } from "./ui/dom";
 import { BookRepository } from "./vault/repository";
@@ -21,6 +21,7 @@ import {
 	ensureFolder,
 	getOrCreateDailyLog,
 	readChapters,
+	updateSceneHeader,
 } from "./vault/structure";
 
 export default class WriterPlugin extends Plugin {
@@ -353,6 +354,38 @@ export default class WriterPlugin extends Plugin {
 		}).open();
 	}
 
+	async setCharactersForScene(file: TFile): Promise<void> {
+		if (!file) return;
+		const book = this.activeBook;
+		if (!book) {
+			new Notice("Primero crea un libro.");
+			return;
+		}
+
+		const scenes = await this.repo.getScenes(book);
+		const characters = await this.repo.getCharacters(book, scenes);
+		const current = scenes.find((s) => s.path === file.path);
+		const currentNames = new Set((current?.characters ?? []).map((c) => c.toLowerCase()));
+
+		const items = characters.map((c) => ({
+			name: c.name,
+			hint: c.status === "sin ficha" ? "POV sin ficha todavía" : `${ROLE_LABELS[c.role]} · ${c.appearsIn.length} escenas`,
+			selected: currentNames.has(c.name.toLowerCase()),
+		}));
+
+		new MultiPickerModal(this.app, {
+			title: "Personajes en esta escena",
+			items,
+			onSubmit: async (names) => {
+				const clean = Array.from(new Set(names.map((n) => n.trim()).filter(Boolean)));
+				await writeFrontMatter(this.app, file, { [FM.CHARACTERS]: clean });
+				this.repo.invalidate();
+				await this.refreshAll();
+				new Notice(clean.length > 0 ? `Escena: ${clean.join(", ")}` : "Escena sin personajes marcados.");
+			},
+		}).open();
+	}
+
 	async setPovForScene(file: TFile): Promise<void> {
 		if (!file) return;
 		const book = this.activeBook;
@@ -378,6 +411,7 @@ export default class WriterPlugin extends Plugin {
 				});
 				this.repo.invalidate();
 				await this.refreshAll();
+				await this.syncSceneHeader(file.path);
 				new Notice(picked.name === "— sin POV —" ? "Escena sin POV" : `POV: ${picked.name}`);
 			})();
 		}).open();
@@ -394,6 +428,7 @@ export default class WriterPlugin extends Plugin {
 		await writeFrontMatter(this.app, file, { [FM.STATUS]: next });
 		this.repo.invalidate();
 		await this.refreshAll();
+		await this.syncSceneHeader(file.path);
 		new Notice(`Estado: ${STATUS_LABELS[next]}`);
 	}
 
@@ -416,9 +451,10 @@ export default class WriterPlugin extends Plugin {
 	}
 
 	async stopSession(): Promise<void> {
-		await this.sessions.stop(this.activeBook);
+		const session = await this.sessions.stop(this.activeBook);
 		this.repo.invalidate();
 		await this.refreshAll();
+		if (session?.notePath) await this.syncSceneHeader(session.notePath);
 	}
 
 	async toggleFocus(): Promise<void> {
@@ -427,6 +463,12 @@ export default class WriterPlugin extends Plugin {
 			return;
 		}
 		await this.focus.enter();
+	}
+
+	/** Refresca la cabecera `> **POV:** …` de una escena tras un cambio. */
+	async syncSceneHeader(path: string): Promise<void> {
+		const file = this.app.vault.getAbstractFileByPath(path);
+		if (file instanceof TFile) await updateSceneHeader(this.app, this.settings, file);
 	}
 
 	/** Abre la escena en la que más probablemente quieras seguir. */

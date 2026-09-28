@@ -322,6 +322,18 @@
 	margin-top: 2px;
 }
 
+.bw-scene-chars {
+	color: var(--text-accent);
+}
+
+.bw-chapter-chars {
+	color: var(--bw-muted);
+	font-size: var(--font-ui-smaller);
+	margin-bottom: 6px;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+}
+
 .bw-scene-words {
 	font-variant-numeric: tabular-nums;
 }

@@ -1,7 +1,8 @@
 import { App, Notice, TAbstractFile, TFolder, TFile, Vault, normalizePath } from "obsidian";
 import { WriterSettings } from "../settings";
+import { countWords } from "../stats/count";
 import { ChapterRef, FM, ItemType, SceneStatus } from "../types";
-import { writeFrontMatter, frontMatterOf } from "./schema";
+import { writeFrontMatter, frontMatterOf, bodyOf } from "./schema";
 
 export const FOLDER = {
 	manuscript: "Manuscrito",
@@ -274,7 +275,14 @@ export async function createScene(
 	app: App,
 	settings: WriterSettings,
 	book: string,
-	opts: { title: string; chapterTitle: string; order?: number; status?: SceneStatus; pov?: string }
+	opts: {
+		title: string;
+		chapterTitle: string;
+		order?: number;
+		status?: SceneStatus;
+		pov?: string;
+		characters?: string[];
+	}
 ): Promise<TFile> {
 	const { vault } = app;
 	const chapters = await readChapters(app, settings, book);
@@ -319,6 +327,7 @@ export async function createScene(
 		[FM.ORDER]: order,
 		[FM.STATUS]: opts.status ?? "draft",
 		[FM.POV]: opts.pov ?? "",
+		[FM.CHARACTERS]: opts.characters ?? [],
 		[FM.ESTIMATE]: 0,
 	});
 
@@ -337,6 +346,39 @@ async function nextSceneOrder(app: App, folder: string): Promise<number> {
 		if (m) max = Math.max(max, Number(m[1]));
 	}
 	return max;
+}
+
+/**
+ * Actualiza la línea de cabecera de una escena
+ * (`> **POV:** … **Estado:** … **Palabras:** n`) con el frontmatter actual.
+ * Se llama tras cambiar POV, estado o al terminar una sesión; así la cabecera
+ * no se queda con el valor del momento de crear la escena.
+ */
+export async function updateSceneHeader(
+	app: App,
+	settings: WriterSettings,
+	file: TFile
+): Promise<void> {
+	const mkline = (source: string) => {
+		const front = frontMatterOf(source);
+		if (front[FM.TYPE] !== "scene" && front[FM.CHAPTER] === undefined) return null;
+
+		const pov = String(front[FM.POV] ?? "");
+		const status = String(front[FM.STATUS] ?? "draft");
+		const words = countWords(bodyOf(source), {
+			countHeadings: settings.countHeadings,
+		}).words;
+		return `> **POV:** ${pov || "—"}   **Estado:** ${status}   **Palabras:** ${words}`;
+	};
+
+	// process hace el leer+modificar+escribir atómico: si la nota está abierta
+	// en el editor, no se pierde el cursor
+	await app.vault.process(file, (source) => {
+		if (!/^>\s*\*\*POV:\*\*.*$/m.test(source)) return source;
+		const line = mkline(source);
+		if (line === null) return source;
+		return source.replace(/^>\s*\*\*POV:\*\*.*$/m, line);
+	});
 }
 
 async function appendSceneToChapterNote(

@@ -20,6 +20,7 @@ export const FM = {
 	CHAPTER: "bw_chapter",
 	CHAPTERS: "bw_chapters",
 	APPEARS: "bw_appears",
+	CHARACTERS: "bw_characters",
 	KIND: "bw_kind",
 } as const;
 
@@ -38,6 +39,8 @@ export interface Scene {
 	order: number;
 	status: SceneStatus;
 	pov: string;
+	/** Personajes que aparecen en la escena (bw_characters + POV). */
+	characters: string[];
 	words: number;
 	chars: number;
 	synopsis: string;
@@ -50,6 +53,8 @@ export interface Chapter {
 	title: string;
 	order: number;
 	scenes: Scene[];
+	/** Personajes que aparecen en alguna de sus escenas (sin repetir). */
+	characters: string[];
 	words: number;
 }
 

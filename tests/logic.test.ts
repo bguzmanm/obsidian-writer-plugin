@@ -141,7 +141,7 @@ check(
 	countWords(
 		"# La estación\n\n> **POV:** Ana\n\n## Sinopsis\n\nAna llega tarde.\n\n## Escena\n\nLa lluvia no paraba desde la madrugada.\n"
 	).words,
-	12
+	10
 );
 
 check(
