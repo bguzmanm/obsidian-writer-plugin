@@ -10,22 +10,33 @@ notas con cualquier otra herramienta.
 
 ## Instalación
 
+Para usar el plugin tal cual (sin desarrollarlo), lo más fácil es
+[BRAT](https://tfthacker.medium.com/introducing-brat-beta-reviewers-auto-update-tool-for-obsidian-63d176db27b5):
+
+1. Instala **BRAT** desde *Ajustes → Plugins de la comunidad*.
+2. Ejecuta el comando **BRAT: Add a beta plugin for testing** y pega
+   `bguzmanm/obsidian-writer-plugin`.
+3. Activa **Writer** en *Ajustes → Plugins de la comunidad*.
+
+BRAT se actualiza solo desde las releases de GitHub (o con el comando
+*Check for updates to all beta plugins and UPDATE*), así que no hay que
+copiar archivos a mano.
+
+### Instalación manual
+
 ```bash
 npm install
-npm run build     # compila y deja main.js junto al resto de archivos
+npm run deploy     # compila y copia manifest.json, main.js y styles.css al vault
 ```
 
-Después copia estos tres archivos a tu vault:
+La ruta del vault se lee de `.deploy-path` (una línea con la ruta completa) o
+de la variable de entorno `WRITER_VAULT`. Después recarga Obsidian y activa
+**Writer** en *Ajustes → Plugins de la comunidad*.
 
-```
-<tu-vault>/.obsidian/plugins/book-writer/manifest.json
-<tu-vault>/.obsidian/plugins/book-writer/main.js
-<tu-vault>/.obsidian/plugins/book-writer/styles.css
-```
-
-Recarga Obsidian y activa **Writer** en *Ajustes → Plugins de la comunidad*.
-
-Para desarrollo, `npm run dev` recompila en cada cambio.
+Para desarrollo, `npm run deploy:watch` recompila en cada cambio dentro de
+`src/` y resincroniza los archivos en el vault automáticamente. Si tienes el
+plugin de desarrollo **Hot Reload** instalado en tu vault, la actualización de
+Writer se aplica sin recargar Obsidian.
 
 ## Estructura que crea
 
@@ -120,10 +131,13 @@ frontmatter nunca se cuenta.
 ## Desarrollo
 
 ```bash
-npm run dev        # watch
-npm run typecheck  # tsc --noEmit
-npm test           # 87 pruebas de conteo, fechas, rachas, esquema y sesiones
-npm run build      # typecheck + bundle de producción
+npm run dev          # watch + hot reload del plugin (si lo tienes)
+npm run deploy       # compila y copia al vault
+npm run deploy:watch # esbuild en watch + resincroniza al vault
+npm run typecheck    # tsc --noEmit
+npm test             # 87 pruebas de conteo, fechas, rachas, esquema y sesiones
+npm run build        # typecheck + bundle de producción
+scripts/release.sh   # release de GitHub con assets para BRAT
 ```
 
 Las pruebas cubren el conteo con acentos y puntuación, el salto de años y meses en
