@@ -1,0 +1,27 @@
+{
+	"name": "obsidian-writer-plugin",
+	"version": "1.0.0",
+	"description": "Obsidian plugin para escribir un libro de principio a fin",
+	"main": "main.js",
+	"scripts": {
+		"dev": "node esbuild.config.mjs",
+		"build": "tsc --noEmit --skipLibCheck && node esbuild.config.mjs production",
+		"typecheck": "tsc --noEmit --skipLibCheck",
+		"test": "node tests/build.mjs && node /tmp/bw-test/logic.cjs && node /tmp/bw-test/schema.cjs && node /tmp/bw-test/flow.mjs && node /tmp/bw-test/dom.mjs"
+	},
+	"keywords": [
+		"obsidian",
+		"obsidian-plugin",
+		"writing",
+		"manuscript"
+	],
+	"license": "MIT",
+	"devDependencies": {
+		"@types/node": "^22.10.2",
+		"builtin-modules": "^4.0.0",
+		"esbuild": "^0.24.2",
+		"obsidian": "^1.7.2",
+		"tslib": "^2.8.1",
+		"typescript": "^5.7.2"
+	}
+}

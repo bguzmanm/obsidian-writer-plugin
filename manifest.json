@@ -1,0 +1,9 @@
+{
+	"id": "book-writer",
+	"name": "Writer",
+	"version": "1.0.0",
+	"minAppVersion": "1.5.0",
+	"description": "Herramientas para escribir un libro de principio a fin: estructura de manuscrito, metas diarias, fichas de personajes y mundo, estadísticas de palabras y modo escritura sin distracciones.",
+	"author": "Writer",
+	"isDesktopOnly": false
+}

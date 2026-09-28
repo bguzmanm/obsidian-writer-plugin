@@ -1,0 +1,619 @@
+/* ==========================================================================
+   Writer — estilos del panel y del modo escritura
+   Todo lo del panel usa el prefijo bw- para no chocar con otros plugins.
+   ========================================================================== */
+
+.bw-panel {
+	--bw-accent: var(--interactive-accent);
+	--bw-muted: var(--text-muted);
+	--bw-border: var(--background-modifier-border);
+	--bw-radius: 8px;
+	padding: 0;
+	overflow-y: auto;
+	font-size: var(--font-ui-small);
+	height: 100%;
+}
+
+/* ---------------------------------------------------------------- cabecera */
+
+.bw-header {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 10px 12px 8px;
+	position: sticky;
+	top: 0;
+	background: var(--background-primary);
+	z-index: 3;
+	border-bottom: 1px solid var(--bw-border);
+}
+
+.bw-book-select {
+	flex: 1 1 auto;
+	min-width: 0;
+	font-weight: 600;
+	font-size: var(--font-ui-small);
+	padding: 4px 6px;
+	border-radius: 6px;
+	border: 1px solid var(--bw-border);
+	background: var(--background-modifier-form-field);
+	color: var(--text-normal);
+}
+
+.bw-book-name {
+	flex: 1 1 auto;
+	font-weight: 600;
+	color: var(--bw-muted);
+}
+
+.bw-header-actions {
+	display: flex;
+	gap: 4px;
+	flex: 0 0 auto;
+}
+
+.bw-btn {
+	background: var(--background-modifier-hover);
+	border: 1px solid var(--bw-border);
+	border-radius: 6px;
+	color: var(--text-normal);
+	cursor: pointer;
+	font-size: var(--font-ui-smaller);
+	padding: 4px 9px;
+	line-height: 1.4;
+}
+
+.bw-btn:hover {
+	background: var(--background-modifier-active-hover);
+}
+
+.bw-btn-primary {
+	background: var(--bw-accent);
+	border-color: var(--bw-accent);
+	color: var(--text-on-accent);
+}
+
+.bw-btn-primary:hover {
+	background: var(--bw-accent-hover);
+	filter: brightness(1.05);
+}
+
+/* ------------------------------------------------------------------- tabs */
+
+.bw-tabs {
+	display: flex;
+	gap: 2px;
+	padding: 6px 10px;
+	border-bottom: 1px solid var(--bw-border);
+	position: sticky;
+	top: 45px;
+	background: var(--background-primary);
+	z-index: 2;
+}
+
+.bw-tab {
+	flex: 1 1 0;
+	background: transparent;
+	border: none;
+	border-bottom: 2px solid transparent;
+	color: var(--bw-muted);
+	cursor: pointer;
+	font-size: var(--font-ui-smaller);
+	padding: 5px 2px;
+}
+
+.bw-tab:hover {
+	color: var(--text-normal);
+}
+
+.bw-tab.is-active {
+	color: var(--text-normal);
+	border-bottom-color: var(--bw-accent);
+	font-weight: 600;
+}
+
+.bw-tab-content {
+	padding: 10px 12px 24px;
+}
+
+.bw-body {
+	min-height: 0;
+}
+
+/* ------------------------------------------------------------------ cards */
+
+.bw-card {
+	background: var(--background-secondary);
+	border: 1px solid var(--bw-border);
+	border-radius: var(--bw-radius);
+	padding: 10px 12px;
+	margin-bottom: 10px;
+}
+
+.bw-card-title {
+	font-size: var(--font-ui-smaller);
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: var(--bw-muted);
+	margin-bottom: 8px;
+}
+
+.bw-stat {
+	display: flex;
+	justify-content: space-between;
+	align-items: baseline;
+	gap: 8px;
+	padding: 2px 0;
+}
+
+.bw-stat-label {
+	color: var(--bw-muted);
+}
+
+.bw-stat-value {
+	font-variant-numeric: tabular-nums;
+	font-weight: 600;
+}
+
+.bw-stat.is-goal-met .bw-stat-value {
+	color: var(--text-success, #4a9);
+}
+
+.bw-stat.is-live .bw-stat-value {
+	color: var(--bw-accent);
+}
+
+.bw-hint {
+	color: var(--bw-muted);
+	font-size: var(--font-ui-smaller);
+	margin-top: 6px;
+	font-style: italic;
+}
+
+.bw-progress {
+	background: var(--background-modifier-border);
+	border-radius: 999px;
+	height: 6px;
+	margin-top: 6px;
+	overflow: hidden;
+}
+
+.bw-progress-fill {
+	background: var(--bw-accent);
+	height: 100%;
+	border-radius: 999px;
+	transition: width 0.3s ease;
+}
+
+/* ----------------------------------------------------------------- rachas */
+
+.bw-card-streak {
+	text-align: center;
+}
+
+.bw-streak-row {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 4px 0;
+}
+
+.bw-streak-value {
+	font-size: 2.4em;
+	font-weight: 700;
+	line-height: 1;
+	color: var(--bw-accent);
+}
+
+.bw-streak-label {
+	color: var(--bw-muted);
+	font-size: var(--font-ui-smaller);
+}
+
+/* --------------------------------------------------------------- estados */
+
+.bw-status-row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 3px 0;
+}
+
+.bw-dot {
+	width: 9px;
+	height: 9px;
+	border-radius: 50%;
+	flex: 0 0 auto;
+}
+
+.bw-dot-idea { background: #999; }
+.bw-dot-outline { background: #b58b00; }
+.bw-dot-draft { background: #3b82f6; }
+.bw-dot-revision { background: #a855f7; }
+.bw-dot-done { background: #22a06b; }
+
+.bw-status-label {
+	flex: 1 1 auto;
+}
+
+.bw-status-count {
+	font-variant-numeric: tabular-nums;
+	color: var(--bw-muted);
+}
+
+/* ----------------------------------------------------------- mapa calor */
+
+.bw-heatmap {
+	display: flex;
+	gap: 3px;
+	overflow-x: auto;
+	padding-bottom: 2px;
+}
+
+.bw-heat-col {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+}
+
+.bw-heat-cell {
+	width: 10px;
+	height: 10px;
+	border-radius: 2px;
+	background: var(--background-modifier-border);
+	flex: 0 0 auto;
+}
+
+.bw-heat-l0 { background: var(--background-modifier-border); }
+.bw-heat-l1 { background: rgba(120, 160, 255, 0.35); }
+.bw-heat-l2 { background: rgba(120, 160, 255, 0.6); }
+.bw-heat-l3 { background: rgba(120, 160, 255, 0.8); }
+.bw-heat-l4 { background: var(--interactive-accent); }
+.bw-heat-empty { opacity: 0.25; }
+
+.bw-heat-legend {
+	display: flex;
+	align-items: center;
+	gap: 3px;
+	margin-top: 8px;
+	color: var(--bw-muted);
+	font-size: var(--font-ui-smaller);
+}
+
+/* ---------------------------------------------------------------- escenas */
+
+.bw-scene {
+	border: 1px solid var(--bw-border);
+	border-radius: 6px;
+	padding: 7px 9px;
+	margin-bottom: 6px;
+	background: var(--background-primary);
+}
+
+.bw-scene-head {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	justify-content: space-between;
+}
+
+.bw-scene-title,
+.bw-scene-head .bw-link {
+	font-weight: 600;
+	color: var(--text-normal);
+	text-decoration: none;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.bw-scene-head .bw-link:hover {
+	color: var(--text-accent);
+	text-decoration: underline;
+}
+
+.bw-scene-meta {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	color: var(--bw-muted);
+	font-size: var(--font-ui-smaller);
+	margin-top: 2px;
+}
+
+.bw-scene-words {
+	font-variant-numeric: tabular-nums;
+}
+
+.bw-scene-synopsis {
+	color: var(--bw-muted);
+	font-size: var(--font-ui-smaller);
+	margin-top: 5px;
+	padding-left: 7px;
+	border-left: 2px solid var(--bw-border);
+	display: -webkit-box;
+	-webkit-line-clamp: 3;
+	line-clamp: 3;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+/* ------------------------------------------------------------------ pills */
+
+.bw-pill {
+	font-size: 0.72em;
+	padding: 1px 7px;
+	border-radius: 999px;
+	white-space: nowrap;
+	cursor: pointer;
+	user-select: none;
+	border: 1px solid transparent;
+}
+
+.bw-pill-idea { background: rgba(150, 150, 150, 0.2); color: var(--text-muted); }
+.bw-pill-outline { background: rgba(181, 139, 0, 0.2); color: #c9a227; }
+.bw-pill-draft { background: rgba(59, 130, 246, 0.2); color: #6ba3f8; }
+.bw-pill-revision { background: rgba(168, 85, 247, 0.2); color: #b47cf5; }
+.bw-pill-done { background: rgba(34, 160, 107, 0.2); color: #35b57d; }
+
+.bw-pill-warn {
+	background: rgba(220, 80, 80, 0.18);
+	color: #e07070;
+	cursor: default;
+}
+
+/* -------------------------------------------------------------- personajes */
+
+.bw-character {
+	border-bottom: 1px solid var(--bw-border);
+	padding: 7px 2px;
+}
+
+.bw-character:last-child {
+	border-bottom: none;
+}
+
+.bw-character-head {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	justify-content: space-between;
+}
+
+.bw-character-name {
+	font-weight: 600;
+}
+
+.bw-character-summary {
+	color: var(--text-normal);
+	font-size: var(--font-ui-smaller);
+	margin: 3px 0;
+}
+
+.bw-mentions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin-top: 4px;
+}
+
+.bw-mentions .bw-link {
+	font-size: var(--font-ui-smaller);
+	background: var(--background-modifier-hover);
+	border-radius: 4px;
+	padding: 0 5px;
+	text-decoration: none;
+	color: var(--bw-muted);
+}
+
+.bw-mentions .bw-link:hover {
+	color: var(--text-accent);
+}
+
+.bw-muted {
+	color: var(--bw-muted);
+	font-size: var(--font-ui-smaller);
+}
+
+.bw-world-row {
+	padding: 5px 2px;
+	border-bottom: 1px solid var(--bw-border);
+}
+
+.bw-world-row:last-child {
+	border-bottom: none;
+}
+
+/* --------------------------------------------------------------- secciones */
+
+.bw-section {
+	border: 1px solid var(--bw-border);
+	border-radius: var(--bw-radius);
+	margin-bottom: 8px;
+	background: var(--background-secondary);
+	overflow: hidden;
+}
+
+.bw-section-title {
+	cursor: pointer;
+	padding: 8px 11px;
+	font-weight: 600;
+	font-size: var(--font-ui-smaller);
+	user-select: none;
+	background: var(--background-secondary);
+}
+
+.bw-section-title:hover {
+	background: var(--background-modifier-hover);
+}
+
+.bw-section-body {
+	padding: 4px 11px 10px;
+	background: var(--background-primary);
+}
+
+/* ------------------------------------------------------------------ varios */
+
+.bw-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin-bottom: 10px;
+}
+
+.bw-empty {
+	color: var(--bw-muted);
+	font-style: italic;
+	font-size: var(--font-ui-smaller);
+	padding: 8px 0;
+}
+
+.bw-link {
+	color: var(--text-accent);
+	cursor: pointer;
+}
+
+.bw-statusbar-words {
+	font-variant-numeric: tabular-nums;
+}
+
+.bw-statusbar-goal {
+	color: var(--text-muted);
+}
+
+.bw-statusbar-live {
+	color: var(--interactive-accent);
+}
+
+/* ==========================================================================
+   Modo escritura
+   ========================================================================== */
+
+body.bw-focus-mode .app-container > .ribbon,
+body.bw-focus-mode .workspace-tab-header-container,
+body.bw-focus-mode .workspace-drawer,
+body.bw-focus-mode .status-bar,
+body.bw-focus-mode .view-header,
+body.bw-focus-mode .workspace-split.mod-root > .workspace-tab-header-container,
+body.bw-focus-mode .prompt,
+body.bw-focus-mode .suggestion-container {
+	display: none !important;
+}
+
+body.bw-focus-mode .workspace-leaf-content {
+	background: var(--background-primary);
+}
+
+body.bw-focus-mode .view-content {
+	overflow-y: auto;
+}
+
+/* línea de lectura cómoda: ni muy corta ni muy larga */
+body.bw-focus-mode .cm-content {
+	max-width: 34em;
+	margin: 0 auto;
+	padding: 12vh 0 45vh;
+	line-height: 1.7;
+	font-size: 1.1em;
+}
+
+body.bw-focus-mode .cm-line {
+	padding: 0 1.2em;
+}
+
+/* ==========================================================================
+   Bloques de diálogo
+   ```dialoge   o   ```dialogo
+   Cada línea se pinta como línea de diálogo con su raya. Las líneas vacías
+   dejan un hueco de separación de escena.
+   ========================================================================== */
+
+.bw-dialogue {
+	margin: 0.8em 0;
+}
+
+.bw-dialogue-line {
+	display: flex;
+	gap: 0.5em;
+	margin: 0.15em 0;
+}
+
+.bw-dialogue-dash {
+	flex: 0 0 auto;
+	color: var(--text-faint);
+}
+
+.bw-dialogue-text {
+	flex: 1 1 auto;
+}
+
+.bw-dialogue-break {
+	height: 0.9em;
+}
+
+/* HUD superior */
+.bw-focus-hud {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	z-index: 100;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	padding: 8px 18px;
+	background: linear-gradient(to bottom, var(--background-primary) 40%, transparent);
+	pointer-events: none;
+	font-size: var(--font-ui-smaller);
+}
+
+.bw-focus-goal {
+	font-weight: 600;
+	color: var(--text-normal);
+	opacity: 0.75;
+}
+
+.bw-focus-stats {
+	display: flex;
+	align-items: baseline;
+	gap: 14px;
+}
+
+.bw-focus-clock {
+	font-variant-numeric: tabular-nums;
+	font-weight: 700;
+	color: var(--text-normal);
+	opacity: 0.8;
+}
+
+.bw-focus-clock.is-over {
+	color: var(--text-success, #4a9);
+}
+
+.bw-focus-words,
+.bw-focus-added,
+.bw-focus-pct {
+	color: var(--text-muted);
+	font-variant-numeric: tabular-nums;
+}
+
+.bw-focus-exit {
+	color: var(--text-faint);
+	font-size: var(--font-ui-smaller);
+	opacity: 0.6;
+}
+
+/* en pantallas pequeñas el HUD no cabe entero */
+@media (max-width: 600px) {
+	.bw-focus-pct,
+	.bw-focus-exit {
+		display: none;
+	}
+
+	.bw-focus-hud {
+		flex-wrap: wrap;
+		gap: 6px;
+	}
+}
