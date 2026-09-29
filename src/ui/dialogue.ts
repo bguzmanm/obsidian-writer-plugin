@@ -5,17 +5,16 @@ const DASH_PREFIX = /^[—-]\s*/;
 /**
  * Render de bloques de diálogo:
  *
- *     ```dialoge
+ *     ```dialogue
  *     ¡Hola! —dijo Ana.
  *     - ¿Vienes? —preguntó Marcos.
  *     ```
  *
  * Cada línea se pinta con su raya de diálogo (—) y las líneas vacías dejan
- * un hueco de separación de escena. Se aceptan los idiomas "dialoge" y
- * "dialogo".
+ * un hueco de separación de escena. "dialogo" se acepta como alias.
  */
 export function registerDialogueBlocks(plugin: WriterPlugin): void {
-	for (const lang of ["dialoge", "dialogo"]) {
+	for (const lang of ["dialogue", "dialogo"]) {
 		plugin.registerMarkdownCodeBlockProcessor(lang, (source, el) => {
 			el.addClass("bw-dialogue");
 
